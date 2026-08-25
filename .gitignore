@@ -1,0 +1,38 @@
+# Archivos de compilación y salida
+target/
+*.class
+
+# Empaquetados
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Archivos de Log
+*.log
+
+# Archivos de entorno y secretos
+.env
+.env.local
+
+# Configuración de IDEs y Editores
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.project
+.classpath
+.factorypath
+
+# Archivos del Sistema Operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Crash logs
+hs_err_pid*
+replay_pid*

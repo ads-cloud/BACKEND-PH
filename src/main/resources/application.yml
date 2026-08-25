@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: proyecto-ph-backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ph_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgrespassword}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:admin}
+    password: ${RABBITMQ_PASS:admin123}
+    listener:
+      simple:
+        acknowledge-mode: auto
+
+jwt:
+  secret: ${JWT_SECRET:9a4f2c8d7e1b5a3f8c0d2e4f6a8b1c3d5e7f9a0b2c4d6e8f1a3b5c7d9e0f2a4b}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 horas por defecto
+
+logging:
+  level:
+    root: WARN
+    com.ph.backend: WARN
+    org.springframework.security: WARN
+    com.ph.backend.config.security: WARN
+    com.ph.backend.config.tenant: WARN
+
+resend:
+  api-key: ${RESEND_API_KEY:your_resend_api_key_here}
+  from-email: ${RESEND_FROM_EMAIL:onboarding@resend.dev}
+
