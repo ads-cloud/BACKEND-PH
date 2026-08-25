@@ -47,6 +47,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("SELECT c.id, u FROM Usuario u JOIN FETCH u.persona p JOIN u.copropiedadesAsignadas c JOIN u.roles r WHERE c.id IN :copropiedadIds AND r = com.ph.backend.model.Rol.ROLE_ADMIN")
     List<Object[]> findAdminsByCopropiedadIdsIn(@Param("copropiedadIds") List<Long> copropiedadIds);
 
-    @Query("SELECT COUNT(u) FROM Usuario u JOIN u.copropiedadesAsignadas c WHERE c.id = :copropiedadId AND (u.activo IS NULL OR u.activo = true)")
-    Long countUsuariosActivosByCopropiedadId(@Param("copropiedadId") Long copropiedadId);
+    @Query("SELECT DISTINCT u FROM Usuario u JOIN u.copropiedadesAsignadas c JOIN u.roles r WHERE c.id = :copropiedadId AND r = com.ph.backend.model.Rol.ROLE_APODERADO")
+    List<Usuario> findApoderadosByCopropiedadId(@Param("copropiedadId") Long copropiedadId);
+
+    @Query("SELECT c.id, COUNT(u) FROM Usuario u JOIN u.copropiedadesAsignadas c WHERE c.id IN :copropiedadIds AND (u.activo IS NULL OR u.activo = true) GROUP BY c.id")
+    List<Object[]> countUsuariosActivosByCopropiedadIdsIn(@Param("copropiedadIds") List<Long> copropiedadIds);
 }

@@ -28,9 +28,7 @@ public class VotacionService {
     private final EventPublisherService eventPublisherService;
 
     public java.util.Map<Long, Long> obtenerVotosPorUnidad(Long unidadPrivadaId) {
-        List<VotoEmitido> votos = votoEmitidoRepository.findAll().stream()
-                .filter(v -> v.getUnidadPrivada().getId().equals(unidadPrivadaId))
-                .toList();
+        List<VotoEmitido> votos = votoEmitidoRepository.findByUnidadPrivadaId(unidadPrivadaId);
 
         java.util.Map<Long, Long> mapa = new java.util.HashMap<>();
         for (VotoEmitido v : votos) {

@@ -20,5 +20,8 @@ public interface AsistenciaAsambleaRepository extends JpaRepository<AsistenciaAs
     @Query("SELECT COUNT(a) FROM AsistenciaAsamblea a WHERE a.asamblea.id = :asambleaId")
     Long countAsistentesByAsambleaId(@Param("asambleaId") Long asambleaId);
 
+    @Query("SELECT a.asamblea.id, COUNT(a) FROM AsistenciaAsamblea a WHERE a.asamblea.id IN :asambleaIds GROUP BY a.asamblea.id")
+    List<Object[]> countAsistentesByAsambleaIdsIn(@Param("asambleaIds") List<Long> asambleaIds);
+
     boolean existsByAsambleaIdAndUnidadPrivadaId(Long asambleaId, Long unidadPrivadaId);
 }

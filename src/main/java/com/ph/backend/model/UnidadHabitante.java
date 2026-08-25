@@ -7,6 +7,9 @@ import lombok.*;
 @Entity
 @Table(name = "unidad_habitantes", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"unidad_id", "persona_id"})
+}, indexes = {
+    @Index(name = "idx_uh_unidad_id", columnList = "unidad_id"),
+    @Index(name = "idx_uh_persona_id", columnList = "persona_id")
 })
 @Data
 @NoArgsConstructor

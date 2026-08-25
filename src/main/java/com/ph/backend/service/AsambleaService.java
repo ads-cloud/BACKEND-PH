@@ -147,10 +147,7 @@ public class AsambleaService {
                 }
             }
 
-            List<Usuario> apoderados = usuarioRepository.findAll().stream()
-                    .filter(u -> u.getRoles() != null && u.getRoles().contains(Rol.ROLE_APODERADO))
-                    .filter(u -> u.getCopropiedadesAsignadas() != null && u.getCopropiedadesAsignadas().stream().anyMatch(c -> c.getId().equals(copropiedadId)))
-                    .toList();
+            List<Usuario> apoderados = usuarioRepository.findApoderadosByCopropiedadId(copropiedadId);
 
             for (Usuario usr : apoderados) {
                 usr.setActivo(false);

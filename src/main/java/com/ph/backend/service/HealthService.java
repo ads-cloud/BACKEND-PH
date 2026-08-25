@@ -104,44 +104,70 @@ public class HealthService {
         if (dbStatus.startsWith("UP")) {
             try {
                 List<Copropiedad> copropiedades = copropiedadRepository.findAll();
-                for (Copropiedad cop : copropiedades) {
-                    Long unidades = unidadPrivadaRepository.countByCopropiedadId(cop.getId());
-                    Long usuariosActivos = usuarioRepository.countUsuariosActivosByCopropiedadId(cop.getId());
+                List<Long> copIds = copropiedades.stream().map(Copropiedad::getId).toList();
 
-                    // Buscar si hay asamblea activa (EN_CURSO o CONVOCADA)
-                    Optional<Asamblea> asambleaEnCursoOpt = asambleaRepository.findFirstByCopropiedadIdAndEstadoOrderByFechaDesc(cop.getId(), AsambleaStatus.EN_CURSO);
-                    Optional<Asamblea> asambleaOpt = asambleaEnCursoOpt.isPresent() 
-                            ? asambleaEnCursoOpt 
-                            : asambleaRepository.findFirstByCopropiedadIdAndEstadoOrderByFechaDesc(cop.getId(), AsambleaStatus.EN_REGISTRO);
+                if (!copIds.isEmpty()) {
+                    // 1. Consultas Bulk
+                    List<Object[]> unidadesData = unidadPrivadaRepository.countByCopropiedadIdsIn(copIds);
+                    List<Object[]> usuariosData = usuarioRepository.countUsuariosActivosByCopropiedadIdsIn(copIds);
+                    List<Object[]> votosData = votoEmitidoRepository.countByCopropiedadIdsIn(copIds);
+                    List<Asamblea> asambleasActivas = asambleaRepository.findByCopropiedadIdInAndEstadoIn(
+                            copIds, List.of(AsambleaStatus.EN_CURSO, AsambleaStatus.EN_REGISTRO)
+                    );
 
-                    Boolean tieneAsamblea = asambleaOpt.isPresent();
-                    Long asambleaId = tieneAsamblea ? asambleaOpt.get().getId() : null;
-                    String asambleaTitulo = tieneAsamblea ? asambleaOpt.get().getTitulo() : null;
-                    String asambleaEstado = tieneAsamblea ? asambleaOpt.get().getEstado().name() : null;
-                    Long asistentesQuorum = 0L;
-                    Long votosRegistrados = 0L;
+                    List<Long> asambleaIds = asambleasActivas.stream().map(Asamblea::getId).toList();
+                    List<Object[]> quorumData = asambleaIds.isEmpty() ? List.of() : asistenciaAsambleaRepository.countAsistentesByAsambleaIdsIn(asambleaIds);
 
-                    if (tieneAsamblea) {
-                        Long quorumCount = asistenciaAsambleaRepository.countAsistentesByAsambleaId(asambleaId);
-                        asistentesQuorum = quorumCount != null ? quorumCount : 0L;
+                    // 2. Mapas en memoria O(1)
+                    Map<Long, Long> unidadesMap = new HashMap<>();
+                    for (Object[] row : unidadesData) unidadesMap.put((Long) row[0], (Long) row[1]);
 
-                        Long votosCount = votoEmitidoRepository.countByCopropiedadId(cop.getId());
-                        votosRegistrados = votosCount != null ? votosCount : 0L;
+                    Map<Long, Long> usuariosMap = new HashMap<>();
+                    for (Object[] row : usuariosData) usuariosMap.put((Long) row[0], (Long) row[1]);
+
+                    Map<Long, Long> votosMap = new HashMap<>();
+                    for (Object[] row : votosData) votosMap.put((Long) row[0], (Long) row[1]);
+
+                    Map<Long, Long> quorumMap = new HashMap<>();
+                    for (Object[] row : quorumData) quorumMap.put((Long) row[0], (Long) row[1]);
+
+                    Map<Long, Asamblea> asambleaMap = new HashMap<>();
+                    for (Asamblea a : asambleasActivas) {
+                        Long cId = a.getCopropiedad().getId();
+                        // Priorizar EN_CURSO sobre EN_REGISTRO
+                        if (!asambleaMap.containsKey(cId) || a.getEstado() == AsambleaStatus.EN_CURSO) {
+                            asambleaMap.put(cId, a);
+                        }
                     }
 
-                    monitoreoList.add(HealthStatusDto.CopropiedadMonitoreoDto.builder()
-                            .copropiedadId(cop.getId())
-                            .copropiedadNombre(cop.getNombre())
-                            .nit(com.ph.backend.controller.CopropiedadController.formatearNit(cop.getNit()))
-                            .unidadesRegistradas(unidades != null ? unidades : 0L)
-                            .usuariosActivos(usuariosActivos != null ? usuariosActivos : 0L)
-                            .tieneAsambleaActiva(tieneAsamblea)
-                            .asambleaActivaId(asambleaId)
-                            .asambleaTitulo(asambleaTitulo)
-                            .asambleaEstado(asambleaEstado)
-                            .asistentesQuorum(asistentesQuorum)
-                            .votosRegistrados(votosRegistrados)
-                            .build());
+                    // 3. Ensamblaje en Memoria O(N) sin SQL
+                    for (Copropiedad cop : copropiedades) {
+                        Long copId = cop.getId();
+                        Long unidades = unidadesMap.getOrDefault(copId, 0L);
+                        Long usuariosActivos = usuariosMap.getOrDefault(copId, 0L);
+                        Long votosRegistrados = votosMap.getOrDefault(copId, 0L);
+
+                        Asamblea asamblea = asambleaMap.get(copId);
+                        boolean tieneAsamblea = asamblea != null;
+                        Long asambleaId = tieneAsamblea ? asamblea.getId() : null;
+                        String asambleaTitulo = tieneAsamblea ? asamblea.getTitulo() : null;
+                        String asambleaEstado = tieneAsamblea ? asamblea.getEstado().name() : null;
+                        Long asistentesQuorum = (tieneAsamblea && asambleaId != null) ? quorumMap.getOrDefault(asambleaId, 0L) : 0L;
+
+                        monitoreoList.add(HealthStatusDto.CopropiedadMonitoreoDto.builder()
+                                .copropiedadId(copId)
+                                .copropiedadNombre(cop.getNombre())
+                                .nit(com.ph.backend.controller.CopropiedadController.formatearNit(cop.getNit()))
+                                .unidadesRegistradas(unidades)
+                                .usuariosActivos(usuariosActivos)
+                                .tieneAsambleaActiva(tieneAsamblea)
+                                .asambleaActivaId(asambleaId)
+                                .asambleaTitulo(asambleaTitulo)
+                                .asambleaEstado(asambleaEstado)
+                                .asistentesQuorum(asistentesQuorum)
+                                .votosRegistrados(votosRegistrados)
+                                .build());
+                    }
                 }
             } catch (Exception e) {
                 log.error("Error al obtener datos de monitoreo por PH: {}", e.getMessage());

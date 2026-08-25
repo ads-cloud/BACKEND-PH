@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "votos_emitidos", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"pregunta_id", "unidad_privada_id"})
+}, indexes = {
+    @Index(name = "idx_voto_unidad_id", columnList = "unidad_privada_id"),
+    @Index(name = "idx_voto_pregunta_id", columnList = "pregunta_id"),
+    @Index(name = "idx_voto_opcion_id", columnList = "opcion_voto_id")
 })
 @Data
 @NoArgsConstructor

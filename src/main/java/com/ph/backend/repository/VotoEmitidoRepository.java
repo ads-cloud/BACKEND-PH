@@ -27,6 +27,8 @@ public interface VotoEmitidoRepository extends JpaRepository<VotoEmitido, Long> 
 
     Long countByPreguntaId(Long preguntaId);
 
-    @Query("SELECT COUNT(v) FROM VotoEmitido v WHERE v.pregunta.asamblea.copropiedad.id = :copropiedadId")
-    Long countByCopropiedadId(@Param("copropiedadId") Long copropiedadId);
+    List<VotoEmitido> findByUnidadPrivadaId(Long unidadPrivadaId);
+
+    @Query("SELECT v.pregunta.asamblea.copropiedad.id, COUNT(v) FROM VotoEmitido v WHERE v.pregunta.asamblea.copropiedad.id IN :copropiedadIds GROUP BY v.pregunta.asamblea.copropiedad.id")
+    List<Object[]> countByCopropiedadIdsIn(@Param("copropiedadIds") List<Long> copropiedadIds);
 }

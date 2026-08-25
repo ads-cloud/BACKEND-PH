@@ -15,4 +15,5 @@ public interface AsambleaRepository extends JpaRepository<Asamblea, Long> {
     List<Asamblea> findByEstado(AsambleaStatus estado);
     boolean existsByCopropiedadIdAndEstado(Long copropiedadId, AsambleaStatus estado);
     boolean existsByCopropiedadIdAndEstadoIn(Long copropiedadId, List<AsambleaStatus> estados);
+    List<Asamblea> findByCopropiedadIdInAndEstadoIn(List<Long> copropiedadIds, List<AsambleaStatus> estados);
 }
