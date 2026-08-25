@@ -1,6 +1,8 @@
 package com.ph.backend.repository;
 
 import com.ph.backend.model.UnidadPrivada;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +14,7 @@ import java.util.Optional;
 @Repository
 public interface UnidadPrivadaRepository extends JpaRepository<UnidadPrivada, Long> {
     List<UnidadPrivada> findByCopropiedadId(Long copropiedadId);
+    Page<UnidadPrivada> findByCopropiedadId(Long copropiedadId, Pageable pageable);
     Long countByCopropiedadId(Long copropiedadId);
     
     @Query("SELECT u.copropiedad.id, COUNT(u) FROM UnidadPrivada u WHERE u.copropiedad.id IN :copropiedadIds GROUP BY u.copropiedad.id")

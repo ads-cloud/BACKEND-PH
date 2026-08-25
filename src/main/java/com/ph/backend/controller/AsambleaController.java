@@ -19,6 +19,7 @@ import java.util.List;
 public class AsambleaController {
 
     private final AsambleaRepository asambleaRepository;
+    private final com.ph.backend.repository.AsistenciaAsambleaRepository asistenciaRepository;
     private final AsambleaService asambleaService;
     private final QuorumService quorumService;
 
@@ -61,7 +62,17 @@ public class AsambleaController {
     }
 
     @GetMapping("/{id}/asistentes")
-    public ResponseEntity<List<AsistenciaAsamblea>> listarAsistentes(@PathVariable Long id) {
+    public ResponseEntity<?> listarAsistentes(
+            @PathVariable Long id,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (page != null && size != null) {
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                    page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "fechaHoraIngreso")
+            );
+            org.springframework.data.domain.Page<AsistenciaAsamblea> pageResult = asistenciaRepository.findByAsambleaId(id, pageable);
+            return ResponseEntity.ok(com.ph.backend.dto.PageResponseDto.from(pageResult));
+        }
         return ResponseEntity.ok(asambleaService.obtenerAsistentes(id));
     }
 

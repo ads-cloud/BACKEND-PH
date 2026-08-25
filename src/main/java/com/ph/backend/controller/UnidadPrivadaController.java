@@ -30,8 +30,21 @@ public class UnidadPrivadaController {
     private final UsuarioRepository usuarioRepository;
 
     @GetMapping
-    public ResponseEntity<List<UnidadPrivada>> listarUnidades() {
-        Long tenantId = com.ph.backend.config.tenant.TenantContext.getCurrentTenant();
+    public ResponseEntity<?> listarUnidades(
+            @RequestParam(required = false) Long copropiedadId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false, defaultValue = "torre,numeroUnidad") String sort) {
+        Long tenantId = copropiedadId != null ? copropiedadId : com.ph.backend.config.tenant.TenantContext.getCurrentTenant();
+        if (page != null && size != null) {
+            String[] sortParts = sort.split(",");
+            org.springframework.data.domain.Sort sortObj = org.springframework.data.domain.Sort.by(
+                    java.util.Arrays.stream(sortParts).map(String::trim).toArray(String[]::new)
+            );
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, sortObj);
+            org.springframework.data.domain.Page<UnidadPrivada> pageResult = unidadPrivadaRepository.findByCopropiedadId(tenantId, pageable);
+            return ResponseEntity.ok(com.ph.backend.dto.PageResponseDto.from(pageResult));
+        }
         return ResponseEntity.ok(unidadPrivadaRepository.findByCopropiedadId(tenantId));
     }
 
