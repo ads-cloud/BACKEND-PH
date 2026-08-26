@@ -50,8 +50,26 @@ public class CopropiedadController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CopropiedadResponseDto>> listarCopropiedades() {
-        List<Copropiedad> copropiedades = copropiedadRepository.findAll();
+    public ResponseEntity<?> listarCopropiedades(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false, defaultValue = "id") String sort) {
+
+        List<Copropiedad> copropiedades;
+        org.springframework.data.domain.Page<Copropiedad> copropiedadesPage = null;
+
+        if (page != null && size != null) {
+            String[] sortParts = sort.split(",");
+            org.springframework.data.domain.Sort sortObj = org.springframework.data.domain.Sort.by(
+                    java.util.Arrays.stream(sortParts).map(String::trim).toArray(String[]::new)
+            );
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, sortObj);
+            copropiedadesPage = copropiedadRepository.findAll(pageable);
+            copropiedades = copropiedadesPage.getContent();
+        } else {
+            copropiedades = copropiedadRepository.findAll();
+        }
+
         List<Long> copIds = copropiedades.stream().map(Copropiedad::getId).toList();
 
         // 1. Bulk Fetches (Solo 4 consultas a la base de datos en total)
@@ -111,6 +129,21 @@ public class CopropiedadController {
                     .administradores(admins)
                     .build();
         }).toList();
+
+        if (copropiedadesPage != null) {
+            com.ph.backend.dto.PageResponseDto<CopropiedadResponseDto> pagedDto = com.ph.backend.dto.PageResponseDto.<CopropiedadResponseDto>builder()
+                    .content(dtos)
+                    .page(copropiedadesPage.getNumber())
+                    .size(copropiedadesPage.getSize())
+                    .totalElements(copropiedadesPage.getTotalElements())
+                    .totalPages(copropiedadesPage.getTotalPages())
+                    .first(copropiedadesPage.isFirst())
+                    .last(copropiedadesPage.isLast())
+                    .hasNext(copropiedadesPage.hasNext())
+                    .hasPrevious(copropiedadesPage.hasPrevious())
+                    .build();
+            return ResponseEntity.ok(pagedDto);
+        }
 
         return ResponseEntity.ok(dtos);
     }
