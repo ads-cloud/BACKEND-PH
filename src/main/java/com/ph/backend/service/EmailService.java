@@ -26,7 +26,7 @@ public class EmailService {
     private final RestClient restClient = RestClient.create();
 
     @Async
-    public boolean enviarClaveAcceso(String emailDestino, String nombreCompleto, String claveOtp) {
+    public void enviarClaveAcceso(String emailDestino, String nombreCompleto, String claveOtp) {
         String htmlBody = String.format("""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #0f172a; color: #f8fafc;">
                 <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
@@ -69,15 +69,14 @@ public class EmailService {
                     .retrieve()
                     .body(String.class);
 
-            return true;
+            log.info("[BACKEND EMAIL] ✅ Correo de clave de acceso enviado exitosamente a {}", emailDestino);
         } catch (Exception ex) {
-            log.error("[BACKEND EMAIL] ❌ Error al enviar correo vía Resend API: {}", ex.getMessage(), ex);
-            return false;
+            log.error("[BACKEND EMAIL] ❌ Error al enviar correo vía Resend API a {}: {}", emailDestino, ex.getMessage(), ex);
         }
     }
 
     @Async
-    public boolean enviarCredencialesIniciales(String emailDestino, String nombreCompleto, String username, String passwordTemporal, String nombreConjunto) {
+    public void enviarCredencialesIniciales(String emailDestino, String nombreCompleto, String username, String passwordTemporal, String nombreConjunto) {
         String conjuntoInfo = (nombreConjunto != null && !nombreConjunto.isBlank()) 
                 ? "<p style=\"font-size: 14px; color: #94a3b8;\">Conjunto Residencial: <strong>" + nombreConjunto + "</strong></p>" : "";
 
@@ -128,15 +127,14 @@ public class EmailService {
                     .retrieve()
                     .body(String.class);
 
-            return true;
+            log.info("[BACKEND EMAIL] ✅ Credenciales enviadas exitosamente a {}", emailDestino);
         } catch (Exception ex) {
-            log.error("[BACKEND EMAIL] ❌ Error al enviar credenciales iniciales vía Resend API: {}", ex.getMessage(), ex);
-            return false;
+            log.error("[BACKEND EMAIL] ❌ Error al enviar credenciales iniciales vía Resend API a {}: {}", emailDestino, ex.getMessage(), ex);
         }
     }
 
     @Async
-    public boolean enviarCorreoHtml(String emailDestino, String asunto, String cuerpoHtml) {
+    public void enviarCorreoHtml(String emailDestino, String asunto, String cuerpoHtml) {
         Map<String, Object> body = Map.of(
             "from", fromEmail,
             "to", List.of(emailDestino),
@@ -153,10 +151,9 @@ public class EmailService {
                     .retrieve()
                     .body(String.class);
 
-            return true;
+            log.info("[BACKEND EMAIL] ✅ Correo HTML enviado exitosamente a {}", emailDestino);
         } catch (Exception ex) {
             log.error("[BACKEND EMAIL] ❌ Error enviando correo HTML vía Resend API a {}: {}", emailDestino, ex.getMessage(), ex);
-            return false;
         }
     }
 }

@@ -23,11 +23,11 @@ public class CopropiedadModulo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "copropiedad_id", nullable = false)
     private Copropiedad copropiedad;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "modulo_id", nullable = false)
     private Modulo modulo;
 

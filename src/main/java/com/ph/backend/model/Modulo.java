@@ -1,5 +1,6 @@
 package com.ph.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,6 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Modulo {
 
     @Id
@@ -57,7 +59,7 @@ public class Modulo {
     @Builder.Default
     private Integer orden = 0;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "modulo_roles", joinColumns = @JoinColumn(name = "modulo_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "rol")
